@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Capture User Information</title>
+  <script>
+    function sendRequest() {
+      // Example user data, replace with actual data capture logic if needed
+      var userName = "John Doe"; // This should be dynamically captured
+      var userEmail = "john.doe@example.com"; // This should be dynamically captured
+
+      fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userName: userName,
+          userEmail: userEmail
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        window.location.href = 'https://easeip.sharepoint.com/sites/EaseIPProjects'; // Redirect to SharePoint site
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+</head>
+<body onload="sendRequest()">
+  <p>Processing...</p>
+</body>
+</html>
