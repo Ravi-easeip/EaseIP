@@ -3,10 +3,16 @@
 <head>
   <title>Capture User Information</title>
   <script>
-    function sendRequest() {
-      // Example user data, replace with actual data capture logic if needed
-      var userName = "John Doe"; // This should be dynamically captured
-      var userEmail = "john.doe@example.com"; // This should be dynamically captured
+   function onSignIn(googleUser) {
+      var profile = googleUser.getBasicProfile();
+      var userName = profile.getName();
+      var userEmail = profile.getEmail();
+      
+      sendRequest(userName, userEmail);
+    }
+
+    function sendRequest(userName, userEmail) {
+    
 
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
@@ -27,6 +33,6 @@
   </script>
 </head>
 <body onload="sendRequest()">
-  <p>Processing...</p>
+  <p><a href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go for project site page</a>a></p>
 </body>
 </html>
