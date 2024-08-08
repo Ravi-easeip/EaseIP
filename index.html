@@ -2,8 +2,26 @@
 <html>
 <head>
   <title>Capture User Information</title>
+  
+  <!-- Google Sign-In Library -->
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  
+  <!-- MSAL Library for Microsoft Sign-In -->
+  <script src="https://alcdn.msauth.net/browser/2.21.0/msal-browser.min.js"></script>
+
   <script>
-   function onSignIn(googleUser) {
+    // Google Sign-In Configuration
+    function initClient() {
+      gapi.load('auth2', function() {
+        gapi.auth2.init({
+          client_id: '962d3341-bb9f-4413-86fb-9059e7ead742',
+        }).then(function(auth2) {
+          auth2.attachClickHandler(document.getElementById('signin-button-google'), {}, onSignInGoogle, onFailure);
+        });
+      });
+    }
+
+    function onSignInGoogle(googleUser) {
       var profile = googleUser.getBasicProfile();
       var userName = profile.getName();
       var userEmail = profile.getEmail();
@@ -11,9 +29,37 @@
       sendRequest(userName, userEmail);
     }
 
-    function sendRequest(userName, userEmail) {
-    
+    // Microsoft Sign-In Configuration
+    const msalConfig = {
+      auth: {
+        clientId: '962d3341-bb9f-4413-86fb-9059e7ead742',
+        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59',
+        redirectUri: window.location.origin
+      }
+    };
 
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+    function signInMicrosoft() {
+      msalInstance.loginPopup({
+        scopes: ["user.read"]
+      }).then(response => {
+        const userName = response.account.name;
+        const userEmail = response.account.username;
+        
+        sendRequest(userName, userEmail);
+      }).catch(error => {
+        console.error('Microsoft sign-in error:', error);
+      });
+    }
+
+    // Error Handling
+    function onFailure(error) {
+      console.error('Sign-in error:', error);
+    }
+
+    // Send Data to SharePoint List via Azure Logic App or API Endpoint
+    function sendRequest(userName, userEmail) {
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
         headers: {
@@ -26,13 +72,20 @@
       })
       .then(response => response.json())
       .then(data => {
+        console.log('Data saved successfully:', data);
         window.location.href = 'https://easeip.sharepoint.com/sites/EaseIPProjects'; // Redirect to SharePoint site
       })
       .catch(error => console.error('Error:', error));
     }
   </script>
 </head>
-<body onload="sendRequest()">
-  <p><a href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go for project site page</a>a></p>
+<body onload="initClient()">
+  <!-- Google Sign-In Button -->
+  <button id="signin-button-google">Sign in with Google</button>
+  
+  <!-- Microsoft Sign-In Button -->
+  <button onclick="signInMicrosoft()">Sign in with Microsoft</button>
+  
+  <p><a href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go to the project site page</a></p>
 </body>
 </html>
