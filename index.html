@@ -37,19 +37,9 @@
   </center>
 
   <script>
-    // Initialize MSAL configuration
-    const msalConfig = {
-      auth: {
-        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Replace with your Microsoft client ID
-        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Replace with your tenant ID
-        redirectUri: window.location.origin // Use current origin to ensure it stays on the same page
-      }
-    };
 
-    const msalInstance = new msal.PublicClientApplication(msalConfig);
+     document.addEventListener("DOMContentLoaded", function () {
 
-    document.addEventListener("DOMContentLoaded", function () {
-        // Add event listener to the Microsoft login button
         var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
           loginWithMicrosoftButton.addEventListener("click", async function () {
               var codeVerifier = generateRandomString(64);
@@ -92,23 +82,8 @@
             signInMicrosoft();
   });
 
-        // Add event listener to the form submission
-        var loginForm = document.getElementById("loginForm");
-        loginForm.addEventListener("submit", function (event) {
-            event.preventDefault();
-            var email = document.getElementById("email").value;
-            var password = document.getElementById("password").value;
-
-            // Retrieve user data from local storage
-            var userData = JSON.parse(localStorage.getItem("userData"));
-
-            if (userData && userData.email === email && userData.password === password) {
-                window.location.href = "https://easeipprojects.powerappsportals.com/For-Saved-Projects/";
-            } else {
-                alert("Invalid username or password. Please try again.");
-            }
-        });
-    });
+       
+   
 
     function signInMicrosoft() {
       msalInstance.loginPopup({
