@@ -9,7 +9,18 @@
   <!-- MSAL Library for Microsoft Sign-In -->
   <script src="https://alcdn.msauth.net/browser/2.21.0/msal-browser.min.js"></script>
 
-  <script>
+ 
+</head>
+<body onload="initClient()">
+  <!-- Google Sign-In Button -->
+  <button id="signin-button-google">Sign in with Google</button>
+  
+  <!-- Microsoft Sign-In Button -->
+  <button onclick="signInMicrosoft()">Sign in with Microsoft</button>
+  
+  <p><a href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go to the project site page</a></p>
+
+ <script>
     // Google Sign-In Configuration
     function initClient() {
       gapi.load('auth2', function() {
@@ -78,14 +89,5 @@
       .catch(error => console.error('Error:', error));
     }
   </script>
-</head>
-<body onload="initClient()">
-  <!-- Google Sign-In Button -->
-  <button id="signin-button-google">Sign in with Google</button>
-  
-  <!-- Microsoft Sign-In Button -->
-  <button onclick="signInMicrosoft()">Sign in with Microsoft</button>
-  
-  <p><a href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go to the project site page</a></p>
 </body>
 </html>
