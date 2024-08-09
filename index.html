@@ -1,64 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Capture User Information</title>
-  
-  <!-- Google Sign-In Library -->
-  <script src="https://apis.google.com/js/platform.js" async defer></script>
-  
-  <!-- MSAL Library for Microsoft Sign-In -->
-  <script src="https://alcdn.msauth.net/browser/2.21.0/msal-browser.min.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Form</title>
   <style>
     #project-site-link {
       display: none;
     }
   </style>
+  <!-- MSAL Library for Microsoft Sign-In -->
+  <script src="https://alcdn.msauth.net/browser/2.21.0/msal-browser.min.js"></script>
 </head>
-<body onload="initGoogleClient()">
-  <!-- Google Sign-In Button -->
-  <button id="signin-button-google">Sign in with Google</button>
-  
-  <!-- Microsoft Sign-In Button -->
-  <button id="signin-button-microsoft" onclick="signInMicrosoft()">Sign in with Microsoft</button>
-  
-  <!-- Link to SharePoint Site -->
-  <p><a id="project-site-link" href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go to the project site page</a></p>
+<body>
+  <center>
+    <div class="container1" style="margin-left: 50%; margin-top: 5%; width: 50%;">
+      <form id="loginForm" method="post" class="login-form" style="width: 300px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
+        <!-- Microsoft Sign-In Button -->
+        <button id="loginWithMicrosoftButton" type="button">Log in with Microsoft</button>
+        <div style="display: flex; align-items: center; margin-top: 20px; margin-bottom: 20px;">
+          <div style="flex-grow: 1; height: 1px; background-color: black;"></div>
+          <span style="padding: 0 10px;">or</span>
+          <div style="flex-grow: 1; height: 1px; background-color: black;"></div>
+        </div>
+        <input type="text" id="email" name="email" placeholder="Email" required><br><br>
+        <input type="password" id="password" name="password" placeholder="Password" required><br><br>
+        <button type="submit">Log in</button>
+        <div class="forgot-password" style="margin-top: 10px;">
+          <a href="/Forgotten-password" style="color: #007bff;">Forgot your password?</a>
+        </div>
+        <div style="margin-top: 10px;">
+          Don't have an account? <a href="/Sign-Up">Sign up</a>
+        </div>
+      </form>
+    </div>
+  </center>
 
   <script>
-    // Google Sign-In Configuration
-    function initGoogleClient() {
-      gapi.load('auth2', function() {
-        const auth2 = gapi.auth2.init({
-          client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your Google client ID
-        });
-
-        auth2.then(() => {
-          document.getElementById('signin-button-google').addEventListener('click', () => {
-            auth2.signIn().then(onSignInGoogle, onFailure);
-          });
-        });
-      });
-    }
-
-    function onSignInGoogle(googleUser) {
-      const profile = googleUser.getBasicProfile();
-      const userName = profile.getName();
-      const userEmail = profile.getEmail();
-      
-      sendRequest(userName, userEmail);
-    }
-
-    // Microsoft Sign-In Configuration
+    // Initialize MSAL configuration
     const msalConfig = {
       auth: {
         clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Replace with your Microsoft client ID
         authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Replace with your tenant ID
-        redirectUri: window.location.origin
+        redirectUri: window.location.origin // Use current origin to ensure it stays on the same page
       }
     };
 
     const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Add event listener to the Microsoft login button
+        var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
+        loginWithMicrosoftButton.addEventListener("click", function () {
+            signInMicrosoft();
+        });
+
+        // Add event listener to the form submission
+        var loginForm = document.getElementById("loginForm");
+        loginForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+
+            // Retrieve user data from local storage
+            var userData = JSON.parse(localStorage.getItem("userData"));
+
+            if (userData && userData.email === email && userData.password === password) {
+                window.location.href = "https://easeipprojects.powerappsportals.com/For-Saved-Projects/";
+            } else {
+                alert("Invalid username or password. Please try again.");
+            }
+        });
+    });
 
     function signInMicrosoft() {
       msalInstance.loginPopup({
@@ -66,19 +79,13 @@
       }).then(response => {
         const userName = response.account.name;
         const userEmail = response.account.username;
-        
         sendRequest(userName, userEmail);
       }).catch(error => {
         console.error('Microsoft sign-in error:', error);
       });
     }
 
-    // Error Handling
-    function onFailure(error) {
-      console.error('Sign-in error:', error);
-    }
-
-    // Send Data to SharePoint List via Azure Logic App or API Endpoint
+    // Function to send data to Azure Logic App or API Endpoint
     function sendRequest(userName, userEmail) {
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
@@ -93,8 +100,9 @@
       .then(response => response.json())
       .then(data => {
         console.log('Data saved successfully:', data);
-        document.getElementById('signin-button-google').style.display = 'none';
-        document.getElementById('signin-button-microsoft').style.display = 'none';
+        document.getElementById('loginWithMicrosoftButton').style.display = 'none';
+        document.getElementById('email').style.display = 'none';
+        document.getElementById('password').style.display = 'none';
         document.getElementById('project-site-link').style.display = 'block';
       })
       .catch(error => console.error('Error:', error));
