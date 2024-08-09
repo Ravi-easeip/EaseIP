@@ -9,18 +9,25 @@
   <!-- MSAL Library for Microsoft Sign-In -->
   <script src="https://alcdn.msauth.net/browser/2.21.0/msal-browser.min.js"></script>
 
- 
+  <style>
+    #project-site-link {
+      display: none;
+    }
+  </style>
+
+
 </head>
 <body onload="initClient()">
   <!-- Google Sign-In Button -->
   <button id="signin-button-google">Sign in with Google</button>
   
   <!-- Microsoft Sign-In Button -->
-  <button onclick="signInMicrosoft()">Sign in with Microsoft</button>
+  <button id="signin-button-microsoft" onclick="signInMicrosoft()">Sign in with Microsoft</button>
   
-  <p><a href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go to the project site page</a></p>
+  <!-- Link to SharePoint Site -->
+  <p><a id="project-site-link" href="https://easeip.sharepoint.com/sites/EaseIPProjects">Click here to go to the project site page</a></p>
 
- <script>
+  <script>
     // Google Sign-In Configuration
     function initClient() {
       gapi.load('auth2', function() {
@@ -84,7 +91,9 @@
       .then(response => response.json())
       .then(data => {
         console.log('Data saved successfully:', data);
-        window.location.href = 'https://easeip.sharepoint.com/sites/EaseIPProjects'; // Redirect to SharePoint site
+        document.getElementById('signin-button-google').style.display = 'none';
+        document.getElementById('signin-button-microsoft').style.display = 'none';
+        document.getElementById('project-site-link').style.display = 'block';
       })
       .catch(error => console.error('Error:', error));
     }
