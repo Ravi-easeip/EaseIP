@@ -14,10 +14,8 @@
       display: none;
     }
   </style>
-
-
 </head>
-<body onload="initClient()">
+<body onload="initGoogleClient()">
   <!-- Google Sign-In Button -->
   <button id="signin-button-google">Sign in with Google</button>
   
@@ -29,20 +27,24 @@
 
   <script>
     // Google Sign-In Configuration
-    function initClient() {
+    function initGoogleClient() {
       gapi.load('auth2', function() {
-        gapi.auth2.init({
-          client_id: '962d3341-bb9f-4413-86fb-9059e7ead742',
-        }).then(function(auth2) {
-          auth2.attachClickHandler(document.getElementById('signin-button-google'), {}, onSignInGoogle, onFailure);
+        const auth2 = gapi.auth2.init({
+          client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your Google client ID
+        });
+
+        auth2.then(() => {
+          document.getElementById('signin-button-google').addEventListener('click', () => {
+            auth2.signIn().then(onSignInGoogle, onFailure);
+          });
         });
       });
     }
 
     function onSignInGoogle(googleUser) {
-      var profile = googleUser.getBasicProfile();
-      var userName = profile.getName();
-      var userEmail = profile.getEmail();
+      const profile = googleUser.getBasicProfile();
+      const userName = profile.getName();
+      const userEmail = profile.getEmail();
       
       sendRequest(userName, userEmail);
     }
@@ -50,8 +52,8 @@
     // Microsoft Sign-In Configuration
     const msalConfig = {
       auth: {
-        clientId: '962d3341-bb9f-4413-86fb-9059e7ead742',
-        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59',
+        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Replace with your Microsoft client ID
+        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Replace with your tenant ID
         redirectUri: window.location.origin
       }
     };
