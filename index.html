@@ -11,7 +11,6 @@
   </style>
   <!-- MSAL Library for Microsoft Sign-In -->
   <script src="https://alcdn.msauth.net/browser/2.21.0/msal-browser.min.js"></script>
-   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
   <center>
@@ -38,67 +37,37 @@
   </center>
 
   <script>
+    const msalConfig = {
+      auth: {
+        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Your client ID
+        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Your tenant ID
+        redirectUri: 'https://ravi-easeip.github.io/EaseIP/' // GitHub Pages URL
+      }
+    };
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-     document.addEventListener("DOMContentLoaded", function () {
-
-        var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
-          loginWithMicrosoftButton.addEventListener("click", async function () {
-              var codeVerifier = generateRandomString(64);
-              var codeChallenge = await generateCodeChallenge(codeVerifier);
-
-              sessionStorage.setItem('codeVerifier', codeVerifier);
-
-
-      // Construct the authentication URL
-      var authUrl = 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59/oauth2/v2.0/authorize';
-      authUrl += '?client_id=' + encodeURIComponent('fe6a9a02-e15b-48e9-bf75-070094e64a12');
-      authUrl += '&response_type=code';
-      authUrl += '&redirect_uri=' + encodeURIComponent('https://easeip.sharepoint.com/sites/EaseIPProjects');
-      authUrl += '&scope=' + encodeURIComponent('openid profile email');
-      authUrl += '&code_challenge=' + encodeURIComponent(codeChallenge);
-      authUrl += '&code_challenge_method=S256';
-
-      // Redirect the user to Microsoft login page
-      window.location.href = authUrl;
-      function generateRandomString(length) {
-              var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-              var randomString = '';
-
-              for (var i = 0; i < length; i++) {
-                  var randomIndex = Math.floor(Math.random() * chars.length);
-                  randomString += chars[randomIndex];
-              }
-
-              return randomString;
-          }
-
-          async function generateCodeChallenge(codeVerifier) {
-              const encoder = new TextEncoder();
-              const data = encoder.encode(codeVerifier);
-              const hash = await crypto.subtle.digest('SHA-256', data);
-              const hashArray = Array.from(new Uint8Array(hash));
-              const hashBase64 = btoa(hashArray.map(byte => String.fromCharCode(byte)).join(''));
-              return hashBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-          }
-            signInMicrosoft();
-  });
-
-       
-   
-
-    function signInMicrosoft() {
-      msalInstance.loginPopup({
-        scopes: ["user.read"]
-      }).then(response => {
-        const userName = response.account.name;
-        const userEmail = response.account.username;
-        sendRequest(userName, userEmail);
-      }).catch(error => {
-        console.error('Microsoft sign-in error:', error);
+    document.addEventListener("DOMContentLoaded", function () {
+      var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
+      loginWithMicrosoftButton.addEventListener("click", function () {
+        msalInstance.loginRedirect({
+          scopes: ["openid", "profile", "email"]
+        });
       });
-    }
 
-    // Function to send data to Azure Logic App or API Endpoint
+      // Check for response after redirect
+      msalInstance.handleRedirectPromise()
+        .then(response => {
+          if (response !== null) {
+            const userName = response.account.name;
+            const userEmail = response.account.username;
+            sendRequest(userName, userEmail);
+          }
+        })
+        .catch(error => {
+          console.error('Microsoft sign-in error:', error);
+        });
+    });
+
     function sendRequest(userName, userEmail) {
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
@@ -113,10 +82,7 @@
       .then(response => response.json())
       .then(data => {
         console.log('Data saved successfully:', data);
-        document.getElementById('loginWithMicrosoftButton').style.display = 'none';
-        document.getElementById('email').style.display = 'none';
-        document.getElementById('password').style.display = 'none';
-        document.getElementById('project-site-link').style.display = 'block';
+        window.location.href = "https://easeip.sharepoint.com/sites/EaseIPProjects";
       })
       .catch(error => console.error('Error:', error));
     }
