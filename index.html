@@ -51,9 +51,46 @@
     document.addEventListener("DOMContentLoaded", function () {
         // Add event listener to the Microsoft login button
         var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
-        loginWithMicrosoftButton.addEventListener("click", function () {
+          loginWithMicrosoftButton.addEventListener("click", async function () {
+              var codeVerifier = generateRandomString(64);
+              var codeChallenge = await generateCodeChallenge(codeVerifier);
+
+              sessionStorage.setItem('codeVerifier', codeVerifier);
+
+
+      // Construct the authentication URL
+      var authUrl = 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59/oauth2/v2.0/authorize';
+      authUrl += '?client_id=' + encodeURIComponent('962d3341-bb9f-4413-86fb-9059e7ead742');
+      authUrl += '&response_type=code';
+      authUrl += '&redirect_uri=' + encodeURIComponent('https://easeip.sharepoint.com/sites/EaseIPProjects');
+      authUrl += '&scope=' + encodeURIComponent('openid profile email');
+      authUrl += '&code_challenge=' + encodeURIComponent(codeChallenge);
+      authUrl += '&code_challenge_method=S256';
+
+      // Redirect the user to Microsoft login page
+      window.location.href = authUrl;
+      function generateRandomString(length) {
+              var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+              var randomString = '';
+
+              for (var i = 0; i < length; i++) {
+                  var randomIndex = Math.floor(Math.random() * chars.length);
+                  randomString += chars[randomIndex];
+              }
+
+              return randomString;
+          }
+
+          async function generateCodeChallenge(codeVerifier) {
+              const encoder = new TextEncoder();
+              const data = encoder.encode(codeVerifier);
+              const hash = await crypto.subtle.digest('SHA-256', data);
+              const hashArray = Array.from(new Uint8Array(hash));
+              const hashBase64 = btoa(hashArray.map(byte => String.fromCharCode(byte)).join(''));
+              return hashBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+          }
             signInMicrosoft();
-        });
+  });
 
         // Add event listener to the form submission
         var loginForm = document.getElementById("loginForm");
