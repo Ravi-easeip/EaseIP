@@ -42,7 +42,7 @@
   <script>
     const msalConfig = {
       auth: {
-        clientId: '962d3341-bb9f-4413-86fb-9059e7ead742', // Your client ID
+        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Your client ID
         authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Your tenant ID
         redirectUri: 'https://ravi-easeip.github.io/EaseIP/' // GitHub Pages URL
       }
@@ -50,15 +50,18 @@
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     document.addEventListener("DOMContentLoaded", function () {
-      console.log('Document loaded');
-
       var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
       loginWithMicrosoftButton.addEventListener("click", function () {
-        console.log('Login with Microsoft button clicked');
         msalInstance.loginRedirect({
           scopes: ["openid", "profile", "email"]
         }).catch(error => {
           console.error('Redirect error:', error);
+          // Send any available information to the workflow in case of an error
+          if (error.account) {
+            const userName = error.account.name || "Unknown";
+            const userEmail = error.account.username || "Unknown";
+            sendRequest(userName, userEmail);
+          }
         });
       });
 
@@ -66,16 +69,19 @@
       msalInstance.handleRedirectPromise()
         .then(response => {
           if (response !== null) {
-            console.log('Login successful:', response);
             const userName = response.account.name;
             const userEmail = response.account.username;
             sendRequest(userName, userEmail);
-          } else {
-            console.log('No response from redirect');
           }
         })
         .catch(error => {
           console.error('Microsoft sign-in error:', error);
+          // Send any available information to the workflow in case of an error
+          if (error.account) {
+            const userName = error.account.name || "Unknown";
+            const userEmail = error.account.username || "Unknown";
+            sendRequest(userName, userEmail);
+          }
         });
     });
 
