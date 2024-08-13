@@ -3,23 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script type="text/javascript" src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
-<script
-  src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
   <title>Login Form</title>
   <style>
     #project-site-link {
       display: none;
     }
   </style>
-  <!-- MSAL Library for Microsoft Sign-In -->
- 
 </head>
 <body>
   <center>
     <div class="container1" style="margin-left: 50%; margin-top: 5%; width: 50%;">
       <form id="loginForm" method="post" class="login-form" style="width: 300px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
-        <!-- Microsoft Sign-In Button -->
         <button id="loginWithMicrosoftButton" type="button">Log in with Microsoft</button>
         <div style="display: flex; align-items: center; margin-top: 20px; margin-bottom: 20px;">
           <div style="flex-grow: 1; height: 1px; background-color: black;"></div>
@@ -42,9 +38,9 @@
   <script>
     const msalConfig = {
       auth: {
-        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Your client ID
-        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Your tenant ID
-        redirectUri: 'https://easeip.sharepoint.com/sites/EaseIPProjects' // GitHub Pages URL
+        clientId: '962d3341-bb9f-4413-86fb-9059e7ead742',
+        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59',
+        redirectUri: 'https://your-redirect-uri.com' // Replace with your redirect URI
       }
     };
     const msalInstance = new msal.PublicClientApplication(msalConfig);
@@ -56,7 +52,6 @@
           scopes: ["openid", "profile", "email"]
         }).catch(error => {
           console.error('Redirect error:', error);
-          // Send any available information to the workflow in case of an error
           if (error.account) {
             const userName = error.account.name || "Unknown";
             const userEmail = error.account.username || "Unknown";
@@ -65,7 +60,6 @@
         });
       });
 
-      // Check for response after redirect
       msalInstance.handleRedirectPromise()
         .then(response => {
           if (response !== null) {
@@ -76,7 +70,6 @@
         })
         .catch(error => {
           console.error('Microsoft sign-in error:', error);
-          // Send any available information to the workflow in case of an error
           if (error.account) {
             const userName = error.account.name || "Unknown";
             const userEmail = error.account.username || "Unknown";
@@ -99,7 +92,7 @@
       .then(response => response.json())
       .then(data => {
         console.log('Data saved successfully:', data);
-        window.location.href = "https://easeip.sharepoint.com/sites/EaseIPProjects";
+        // Optionally, redirect to another page or display a message
       })
       .catch(error => console.error('Error:', error));
     }
