@@ -59,7 +59,6 @@
       msalInstance.handleRedirectPromise()
         .then(response => {
           if (response !== null) {
-            console.log('MSAL Response:', response);
             const userName = response.account.name;
             const userEmail = response.account.username;
             console.log('User Name:', userName);
@@ -74,12 +73,29 @@
     });
 
     function handleAuthError(error) {
-      if (error.account) {
-        const userName = error.account.name || "Unknown";
-        const userEmail = error.account.username || "Unknown";
+      if (error.errorMessage && error.errorMessage.includes("AADSTS50020")) {
+        console.log('User not in tenant or directory. Handling...');
+
+        // Extract user information from the error object if available
+        const userName = extractClaimFromError(error, 'name') || "Unknown User";
+        const userEmail = extractClaimFromError(error, 'preferred_username') || "Unknown Email";
+
         console.log('Error User Name:', userName);
         console.log('Error User Email:', userEmail);
+
+        // Call your Logic App workflow
         sendRequest(userName, userEmail);
+      }
+    }
+
+    function extractClaimFromError(error, claimType) {
+      // Attempt to extract user claim from the error message
+      try {
+        const claims = JSON.parse(atob(error.idToken.split('.')[1]));
+        return claims[claimType];
+      } catch (e) {
+        console.error('Error parsing claims:', e);
+        return null;
       }
     }
 
