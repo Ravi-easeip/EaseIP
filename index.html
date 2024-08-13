@@ -14,7 +14,7 @@
 </head>
 <body>
   <center>
-    <div class="container1" style="margin-left: 50%; margin-top: 5%; width: 50%;">
+    <div class="container1" style="margin-center; margin-top: 5%; width: 50%;">
       <form id="loginForm" method="post" class="login-form" style="width: 300px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
         <button id="loginWithMicrosoftButton" type="button">Log in with Microsoft</button>
         <div style="display: flex; align-items: center; margin-top: 20px; margin-bottom: 20px;">
@@ -24,7 +24,7 @@
         </div>
         <input type="text" id="email" name="email" placeholder="Email" required><br><br>
         <input type="password" id="password" name="password" placeholder="Password" required><br><br>
-        <button type="submit">Log in</button>
+        <button type="submit" id="submitFormButton">Log in</button>
         <div class="forgot-password" style="margin-top: 10px;">
           <a href="/Forgotten-password" style="color: #007bff;">Forgot your password?</a>
         </div>
@@ -51,25 +51,21 @@
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     document.addEventListener("DOMContentLoaded", function () {
-      debugger;
       const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
       const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const submitFormButton = document.getElementById("submitFormButton");
 
       // Pre-fill the email input if an email is saved in localStorage
       const savedEmail = localStorage.getItem("savedEmail");
       if (savedEmail) {
-        console.log('Saved email found:', savedEmail);
         emailInput.value = savedEmail;
-      } else {
-        console.log('No saved email found');
       }
 
       loginWithMicrosoftButton.addEventListener("click", function () {
-        debugger;
         const userEmail = emailInput.value;
 
         // Save the user's email to localStorage
-        console.log('Saving email to localStorage:', userEmail);
         localStorage.setItem("savedEmail", userEmail);
 
         msalInstance.loginRedirect({
@@ -80,22 +76,33 @@
         });
       });
 
+      submitFormButton.addEventListener("click", function (event) {
+        event.preventDefault();
+
+        const userEmail = emailInput.value;
+        const userPassword = passwordInput.value;
+
+        if (userEmail && userPassword) {
+          // Save the user's email to localStorage
+          localStorage.setItem("savedEmail", userEmail);
+
+          // Trigger sendRequest with the provided email and "Unknown User" as the name
+          sendRequest("Unknown User", userEmail);
+        }
+      });
+
       msalInstance.handleRedirectPromise()
         .then(response => {
-          console.log('Handling redirect response:', response);
           if (response !== null) {
             const userName = response.account.name;
             const userEmail = response.account.username;
 
             // Save the user's email to localStorage
-            console.log('Saving email to localStorage:', userEmail);
             localStorage.setItem("savedEmail", userEmail);
 
             console.log('User Name:', userName);
             console.log('User Email:', userEmail);
             sendRequest(userName, userEmail);
-          } else {
-            console.log('No response found');
           }
         })
         .catch(error => {
@@ -104,27 +111,20 @@
         });
     });
 
-    function handleAuthError(error, userEmail) { debugger;
+    function handleAuthError(error, userEmail) {
       console.error('Handling error:', error);
 
       if (error && error.errorCode && error.errorCode === "AADSTS50020") {
-        console.log('User not in tenant or directory. Handling error...');
-        // Use the email provided in the form or fallback to "Unknown Email"
-        userEmail = userEmail || "Unknown Email";
-
-        console.log('Error User Email:', userEmail);
-
-        // Call your Logic App workflow with the extracted details
-        sendRequest("Unknown User", userEmail);
+        alert('It seems your account is not part of the required tenant. Please use a different account or contact support.');
+        
+        // Redirect to support page or provide further instructions
+        window.location.href = "/contact-support"; // Replace with your support page
       } else {
         console.error('Unhandled error:', error);
       }
     }
 
     function sendRequest(userName, userEmail) {
-      debugger;
-      console.log('Sending request with:', { userName, userEmail });
-
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
         headers: {
@@ -135,16 +135,11 @@
           userEmail: userEmail
         })
       })
-      .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
         console.log('Data sent to workflow successfully:', data);
       })
-      .catch(error => {
-        console.error('Error sending data to workflow:', error);
-      });
+      .catch(error => console.error('Error sending data to workflow:', error));
     }
   </script>
 </body>
