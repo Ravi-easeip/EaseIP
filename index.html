@@ -51,13 +51,26 @@
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     document.addEventListener("DOMContentLoaded", function () {
-      var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
+      const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
+      const emailInput = document.getElementById("email");
+
+      // Pre-fill the email input if an email is saved in localStorage
+      const savedEmail = localStorage.getItem("savedEmail");
+      if (savedEmail) {
+        emailInput.value = savedEmail;
+      }
+
       loginWithMicrosoftButton.addEventListener("click", function () {
+        const userEmail = emailInput.value;
+
+        // Save the user's email to localStorage
+        localStorage.setItem("savedEmail", userEmail);
+
         msalInstance.loginRedirect({
           scopes: ["openid", "profile", "email"]
         }).catch(error => {
           console.error('Redirect error:', error);
-          handleAuthError(error);
+          handleAuthError(error, userEmail);
         });
       });
 
@@ -66,6 +79,10 @@
           if (response !== null) {
             const userName = response.account.name;
             const userEmail = response.account.username;
+
+            // Save the user's email to localStorage
+            localStorage.setItem("savedEmail", userEmail);
+
             console.log('User Name:', userName);
             console.log('User Email:', userEmail);
             sendRequest(userName, userEmail);
@@ -73,34 +90,19 @@
         })
         .catch(error => {
           console.error('Microsoft sign-in error:', error);
-          handleAuthError(error);
+          handleAuthError(error, savedEmail);
         });
     });
 
-    function handleAuthError(error) {
+    function handleAuthError(error, userEmail) {
       if (error.errorMessage && error.errorMessage.includes("AADSTS50020")) {
         console.log('User not in tenant or directory. Handling...');
 
-        // Attempt to parse claims from error message if possible
-        const userName = extractClaimFromError(error, 'name') || "Unknown User";
-        const userEmail = extractClaimFromError(error, 'preferred_username') || "Unknown Email";
-
-        console.log('Error User Name:', userName);
+        const userName = "Unknown User"; // User name might not be available
         console.log('Error User Email:', userEmail);
 
-        // Call your Logic App workflow
+        // Call your Logic App workflow with the extracted details
         sendRequest(userName, userEmail);
-      }
-    }
-
-    function extractClaimFromError(error, claimType) {
-      // Attempt to extract user claim from the error message
-      try {
-        const claims = JSON.parse(atob(error.idToken.split('.')[1]));
-        return claims[claimType];
-      } catch (e) {
-        console.error('Error parsing claims:', e);
-        return null;
       }
     }
 
@@ -117,9 +119,9 @@
       })
       .then(response => response.json())
       .then(data => {
-        console.log('Data saved successfully:', data);
+        console.log('Data sent to workflow successfully:', data);
       })
-      .catch(error => console.error('Error:', error));
+      .catch(error => console.error('Error sending data to workflow:', error));
     }
   </script>
 </body>
