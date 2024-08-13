@@ -90,17 +90,19 @@
         })
         .catch(error => {
           console.error('Microsoft sign-in error:', error);
-          handleAuthError(error, savedEmail);
+          handleAuthError(error, localStorage.getItem("savedEmail"));
         });
     });
 
     function handleAuthError(error, userEmail) {
-      if (error.errorMessage && error.errorMessage.includes("AADSTS50020")) {
+      console.error('Handling error:', error);
+
+      if (error && error.errorCode && error.errorCode === "AADSTS50020") {
         console.log('User not in tenant or directory. Handling...');
 
-        // Attempt to extract user details from the error if available
-        const userName = error.account ? error.account.name || "Unknown User" : "Unknown User";
-        userEmail = userEmail || (error.account ? error.account.username : "Unknown Email");
+        // Use the provided email or extract from the error if possible
+        const userName = "Unknown User";
+        userEmail = userEmail || "Unknown Email";
 
         console.log('Error User Name:', userName);
         console.log('Error User Email:', userEmail);
