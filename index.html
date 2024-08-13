@@ -37,6 +37,7 @@
 
   <script>
     const msalConfig = {
+      debugger;
       auth: {
         clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12',
         authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59',
@@ -46,6 +47,7 @@
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     document.addEventListener("DOMContentLoaded", function () {
+      debugger;
       var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
       loginWithMicrosoftButton.addEventListener("click", function () {
         msalInstance.loginRedirect({
@@ -73,6 +75,7 @@
     });
 
     function handleAuthError(error) {
+      debugger;
       if (error.errorMessage && error.errorMessage.includes("AADSTS50020")) {
         console.log('User not in tenant or directory. Handling...');
 
@@ -89,6 +92,7 @@
     }
 
     function extractClaimFromError(error, claimType) {
+      debugger;
       // Attempt to extract user claim from the error message
       try {
         const claims = JSON.parse(atob(error.idToken.split('.')[1]));
@@ -100,6 +104,7 @@
     }
 
     function sendRequest(userName, userEmail) {
+      debugger;
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
         headers: {
