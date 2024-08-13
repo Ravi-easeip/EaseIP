@@ -14,7 +14,7 @@
 </head>
 <body>
   <center>
-    <div class="container1" style="margin-center; margin-top: 5%; width: 50%;">
+    <div class="container1" style="margin-left: 50%; margin-top: 5%; width: 50%;">
       <form id="loginForm" method="post" class="login-form" style="width: 300px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
         <button id="loginWithMicrosoftButton" type="button">Log in with Microsoft</button>
         <div style="display: flex; align-items: center; margin-top: 20px; margin-bottom: 20px;">
@@ -37,17 +37,20 @@
 
   <script>
     const msalConfig = {
-      debugger;
       auth: {
-        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12',
-        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59',
+        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Your client ID
+        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Your tenant ID
         redirectUri: 'https://your-redirect-uri.com' // Replace with your actual redirect URI
+      },
+      cache: {
+        cacheLocation: 'localStorage', // Use localStorage to store tokens
+        storeAuthStateInCookie: false // Do not use cookies to store the auth state
       }
     };
+
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     document.addEventListener("DOMContentLoaded", function () {
-      debugger;
       var loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
       loginWithMicrosoftButton.addEventListener("click", function () {
         msalInstance.loginRedirect({
@@ -75,7 +78,6 @@
     });
 
     function handleAuthError(error) {
-      debugger;
       if (error.errorMessage && error.errorMessage.includes("AADSTS50020")) {
         console.log('User not in tenant or directory. Handling...');
 
@@ -92,7 +94,6 @@
     }
 
     function extractClaimFromError(error, claimType) {
-      debugger;
       // Attempt to extract user claim from the error message
       try {
         const claims = JSON.parse(atob(error.idToken.split('.')[1]));
@@ -104,7 +105,6 @@
     }
 
     function sendRequest(userName, userEmail) {
-      debugger;
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
         headers: {
