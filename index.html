@@ -98,11 +98,17 @@
       if (error.errorMessage && error.errorMessage.includes("AADSTS50020")) {
         console.log('User not in tenant or directory. Handling...');
 
-        const userName = "Unknown User"; // User name might not be available
+        // Attempt to extract user details from the error if available
+        const userName = error.account ? error.account.name || "Unknown User" : "Unknown User";
+        userEmail = userEmail || (error.account ? error.account.username : "Unknown Email");
+
+        console.log('Error User Name:', userName);
         console.log('Error User Email:', userEmail);
 
         // Call your Logic App workflow with the extracted details
         sendRequest(userName, userEmail);
+      } else {
+        console.error('Unhandled error:', error);
       }
     }
 
