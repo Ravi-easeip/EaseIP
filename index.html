@@ -51,6 +51,7 @@
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     document.addEventListener("DOMContentLoaded", function () {
+      debugger;
       const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
       const emailInput = document.getElementById("email");
       const passwordInput = document.getElementById("password");
@@ -63,6 +64,7 @@
       }
 
       loginWithMicrosoftButton.addEventListener("click", function () {
+        debugger;
         const userEmail = emailInput.value;
 
         // Save the user's email to localStorage
@@ -77,6 +79,7 @@
       });
 
       submitFormButton.addEventListener("click", function (event) {
+        debugger;
         event.preventDefault();
 
         const userEmail = emailInput.value;
@@ -112,6 +115,7 @@
     });
 
     function handleAuthError(error, userEmail) {
+      debugger;
       console.error('Handling error:', error);
 
       if (error && error.errorCode && error.errorCode === "AADSTS50020") {
@@ -125,6 +129,7 @@
     }
 
     function sendRequest(userName, userEmail) {
+      debugger;
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
         headers: {
