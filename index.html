@@ -14,7 +14,7 @@
 </head>
 <body>
   <center>
-    <div class="container1" style="margin-left: 50%; margin-top: 5%; width: 50%;">
+    <div class="container1" style="margin-center; margin-top: 5%; width: 50%;">
       <form id="loginForm" method="post" class="login-form" style="width: 300px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
         <button id="loginWithMicrosoftButton" type="button">Log in with Microsoft</button>
         <div style="display: flex; align-items: center; margin-top: 20px; margin-bottom: 20px;">
@@ -76,7 +76,7 @@
       if (error.errorMessage && error.errorMessage.includes("AADSTS50020")) {
         console.log('User not in tenant or directory. Handling...');
 
-        // Extract user information from the error object if available
+        // Attempt to parse claims from error message if possible
         const userName = extractClaimFromError(error, 'name') || "Unknown User";
         const userEmail = extractClaimFromError(error, 'preferred_username') || "Unknown Email";
 
