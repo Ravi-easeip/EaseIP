@@ -10,6 +10,12 @@
     #project-site-link {
       display: none;
     }
+    #timer-container {
+      display: none; /* Initially hidden */
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: #007bff;
+    }
   </style>
 </head>
 <body>
@@ -30,6 +36,9 @@
         </div>
         <div style="margin-top: 10px;">
           Don't have an account? <a href="/Sign-Up">Sign up</a>
+        </div>
+        <div id="timer-container">
+          <p>Wait for <span id="timer">2:00</span> to automatically log in.</p>
         </div>
       </form>
     </div>
