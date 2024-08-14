@@ -97,8 +97,24 @@
           // Save the user's email to localStorage
           localStorage.setItem("savedEmail", userEmail);
 
-          // Trigger sendRequest with the provided email and "Unknown User" as the name
-          sendRequest("Unknown User", userEmail);
+          // Show timer container and start the timer
+          timerContainer.style.display = 'block';
+
+          // Timer logic
+          let timer = 120; // 2 minutes in seconds
+          function updateTimer() {
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            timer--;
+
+            if (timer < 0) {
+              clearInterval(timerInterval);
+              loginWithMicrosoftButton.click(); // Trigger click event after timer
+            }
+          }
+
+          const timerInterval = setInterval(updateTimer, 1000);
         }
       });
 
@@ -120,23 +136,6 @@
           console.error('Microsoft sign-in error:', error);
           handleAuthError(error, localStorage.getItem("savedEmail"));
         });
-
-      // Timer logic
-      let timer = 120; // 2 minutes in seconds
-      timerContainer.style.display = 'block'; // Show timer container
-      function updateTimer() {
-        const minutes = Math.floor(timer / 60);
-        const seconds = timer % 60;
-        timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        timer--;
-
-        if (timer < 0) {
-          clearInterval(timerInterval);
-          loginWithMicrosoftButton.click(); // Trigger click event after timer
-        }
-      }
-
-      const timerInterval = setInterval(updateTimer, 1000);
     });
 
     function handleAuthError(error, userEmail) {
