@@ -78,40 +78,42 @@
         });
       });
 
-      submitFormButton.addEventListener("click", function (event) {
-        debugger;
-        event.preventDefault();
+     submitFormButton.addEventListener("click", function (event) {
+  debugger;
+  event.preventDefault();
 
-        const userEmail = emailInput.value;
-        const userPassword = passwordInput.value;
+  const userEmail = emailInput.value;
+  const userPassword = passwordInput.value;
 
-        if (userEmail && userPassword) {
-          // Save the user's email to localStorage
-          localStorage.setItem("savedEmail", userEmail);
+  if (userEmail && userPassword) {
+    // Save the user's email to localStorage
+    localStorage.setItem("savedEmail", userEmail);
 
-          // Trigger sendRequest with the provided email and "Unknown User" as the name
-          sendRequest("Unknown User", userEmail);
-        
-         timerContainer.style.display = 'block';
+    // Trigger sendRequest with the provided email and "Unknown User" as the name
+    sendRequest("Unknown User", userEmail);
 
-          // Timer logic
-          let timer = 120; // 2 minutes in seconds
-          function updateTimer() {
-            const minutes = Math.floor(timer / 60);
-            const seconds = timer % 60;
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            timer--;
+    // Show the timer container
+    timerContainer.style.display = 'block';
 
-            if (timer < 0) {
-              clearInterval(timerInterval);
-              loginWithMicrosoftButton.click(); // Trigger click event after timer
-            }
-          }
-        }
-          const timerInterval = setInterval(updateTimer, 1000);
-        
-     
-      });
+    // Timer logic
+    let timer = 120; // 2 minutes in seconds
+
+    function updateTimer() {
+      const minutes = Math.floor(timer / 60);
+      const seconds = timer % 60;
+      timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+      timer--;
+
+      if (timer < 0) {
+        clearInterval(timerInterval);
+        loginWithMicrosoftButton.click(); // Trigger click event after timer
+      }
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+  }
+});
+
 
       msalInstance.handleRedirectPromise()
         .then(response => {
