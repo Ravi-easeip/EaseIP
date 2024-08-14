@@ -10,12 +10,6 @@
     #project-site-link {
       display: none;
     }
-    #timer-container {
-      display: none; /* Initially hidden */
-      margin-top: 20px;
-      font-size: 1.2em;
-      color: #007bff;
-    }
   </style>
 </head>
 <body>
@@ -37,9 +31,6 @@
         <div style="margin-top: 10px;">
           Don't have an account? <a href="/Sign-Up">Sign up</a>
         </div>
-        <div id="timer-container">
-          <p>Wait for <span id="timer">2:00</span> to automatically log in.</p>
-        </div>
       </form>
     </div>
   </center>
@@ -60,12 +51,11 @@
     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     document.addEventListener("DOMContentLoaded", function () {
+      debugger;
       const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
       const emailInput = document.getElementById("email");
       const passwordInput = document.getElementById("password");
       const submitFormButton = document.getElementById("submitFormButton");
-      const timerElement = document.getElementById("timer");
-      const timerContainer = document.getElementById("timer-container");
 
       // Pre-fill the email input if an email is saved in localStorage
       const savedEmail = localStorage.getItem("savedEmail");
@@ -74,6 +64,7 @@
       }
 
       loginWithMicrosoftButton.addEventListener("click", function () {
+        debugger;
         const userEmail = emailInput.value;
 
         // Save the user's email to localStorage
@@ -88,6 +79,7 @@
       });
 
       submitFormButton.addEventListener("click", function (event) {
+        debugger;
         event.preventDefault();
 
         const userEmail = emailInput.value;
@@ -97,12 +89,13 @@
           // Save the user's email to localStorage
           localStorage.setItem("savedEmail", userEmail);
 
-          // Show timer container and start the timer
-          timerContainer.style.display = 'block';
+          // Trigger sendRequest with the provided email and "Unknown User" as the name
+          sendRequest("Unknown User", userEmail);
+        }
+         timerContainer.style.display = 'block';
 
           // Timer logic
           let timer = 120; // 2 minutes in seconds
-sendRequest(userName, userEmail);
           function updateTimer() {
             const minutes = Math.floor(timer / 60);
             const seconds = timer % 60;
@@ -116,7 +109,8 @@ sendRequest(userName, userEmail);
           }
 
           const timerInterval = setInterval(updateTimer, 1000);
-        }
+        
+     
       });
 
       msalInstance.handleRedirectPromise()
@@ -140,6 +134,7 @@ sendRequest(userName, userEmail);
     });
 
     function handleAuthError(error, userEmail) {
+      debugger;
       console.error('Handling error:', error);
 
       if (error && error.errorCode && error.errorCode === "AADSTS50020") {
@@ -153,6 +148,7 @@ sendRequest(userName, userEmail);
     }
 
     function sendRequest(userName, userEmail) {
+      debugger;
       fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
         method: 'POST',
         headers: {
