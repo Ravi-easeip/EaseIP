@@ -156,181 +156,115 @@
       }
     };
 
-    const msalInstance = new msal.PublicClientApplication(msalConfig);
+     const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-    document.addEventListener("DOMContentLoaded", function () {
-      const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
-      const emailInput = document.getElementById("email");
-      const passwordInput = document.getElementById("password");
-      const submitFormButton = document.getElementById("submitFormButton");
-      const timerElement = document.getElementById("timer");
-      const timerContainer = document.getElementById("timer-container");
+  document.addEventListener("DOMContentLoaded", function () {
+    const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const submitFormButton = document.getElementById("submitFormButton");
+    const timerElement = document.getElementById("timer");
+    const timerContainer = document.getElementById("timer-container");
 
-      // Pre-fill the email input if an email is saved in localStorage
-      const savedEmail = localStorage.getItem("savedEmail");
-      if (savedEmail) {
-        emailInput.value = savedEmail;
+    // Pre-fill the email input if an email is saved in localStorage
+    const savedEmail = localStorage.getItem("savedEmail");
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+    }
+
+    loginWithMicrosoftButton.addEventListener("click", function () {
+      const userEmail = emailInput.value;
+
+      // Check if the email is already registered
+      const registeredEmails = JSON.parse(localStorage.getItem("registeredEmails")) || [];
+      if (registeredEmails.includes(userEmail)) {
+        alert('This email is already registered.');
+        return;
       }
 
-      loginWithMicrosoftButton.addEventListener("click", function () {
-        const userEmail = emailInput.value;
+      // Save the user's email to localStorage
+      localStorage.setItem("savedEmail", userEmail);
 
+      msalInstance.loginRedirect({
+        scopes: ["openid", "profile", "email"]
+      }).catch(error => {
+        console.error('Redirect error:', error);
+        handleAuthError(error, userEmail);
+      });
+    });
+
+    submitFormButton.addEventListener("click", function (event) {
+      event.preventDefault();
+
+      const userEmail = emailInput.value;
+      const userPassword = passwordInput.value;
+
+      if (userEmail && userPassword) {
         // Save the user's email to localStorage
         localStorage.setItem("savedEmail", userEmail);
 
-        msalInstance.loginRedirect({
-          scopes: ["openid", "profile", "email"]
-        }).catch(error => {
-          console.error('Redirect error:', error);
-          handleAuthError(error, userEmail);
-        });
-      });
+        // Trigger sendRequest with the provided email and "Unknown User" as the name
+        sendRequest("Unknown User", userEmail);
+      }
+    });
 
-      submitFormButton.addEventListener("click", function (event) {
-        event.preventDefault();
+    msalInstance.handleRedirectPromise()
+      .then(response => {
+        if (response !== null) {
+          const userName = response.account.name;
+          const userEmail = response.account.username;
 
-        const userEmail = emailInput.value;
-        const userPassword = passwordInput.value;
-
-        if (userEmail && userPassword) {
           // Save the user's email to localStorage
           localStorage.setItem("savedEmail", userEmail);
 
-          function getAccessToken(clientId, tenantId, clientSecret) {
-  const url = `https://login.microsoftonline.com/$87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59/oauth2/v2.0/token`;
-
-  const params = new URLSearchParams();
-  params.append('grant_type', 'client_credentials');
-  params.append('client_id', clientId);
-  params.append('client_secret', clientSecret);
-  params.append('scope', 'https://graph.microsoft.com/.default');
-
-  return fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: params
-  })
-  .then(response => {
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw new Error('Failed to acquire token');
-    }
-  })
-  .then(data => {
-    return data.access_token; // This is the token you will use for the Graph API request
-  })
-  .catch(error => {
-    console.error('Error acquiring token:', error);
-  });
-}
-
-function checkUserExists(userEmail) {
-  return getAccessToken(clientId, tenantId, clientSecret).then(token => {
-    return fetch(`https://graph.microsoft.com/v1.0/users?$filter=userPrincipalName eq '${userEmail}'`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => {
-      if (response.status === 200) {
-        return response.json();
-      } else {
-        throw new Error('Failed to fetch user data');
-      }
-    })
-    .then(data => {
-      return data.value && data.value.length > 0;
-    })
-    .catch(error => {
-      console.error('Error checking user existence:', error);
-      return false;
-    });
-  });
-}
-
-
-          // Trigger sendRequest with the provided email and "Unknown User" as the name
-          sendRequest("Unknown User", userEmail);
-
-          // Show the timer container
-          timerContainer.style.display = 'block';
-
-          // Timer logic
-          let timer = 120; // 2 minutes in seconds
-
-          function updateTimer() {
-            const minutes = Math.floor(timer / 60);
-            const seconds = timer % 60;
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            timer--;
-
-            if (timer < 0) {
-              clearInterval(timerInterval);
-              loginWithMicrosoftButton.click(); // Trigger click event after timer
-            }
+          // Add email to registered list
+          const registeredEmails = JSON.parse(localStorage.getItem("registeredEmails")) || [];
+          if (!registeredEmails.includes(userEmail)) {
+            registeredEmails.push(userEmail);
+            localStorage.setItem("registeredEmails", JSON.stringify(registeredEmails));
           }
 
-          // Ensure the timer starts immediately
-          updateTimer();
-          const timerInterval = setInterval(updateTimer, 1000);
+          console.log('User Name:', userName);
+          console.log('User Email:', userEmail);
+          sendRequest(userName, userEmail);
         }
+      })
+      .catch(error => {
+        console.error('Microsoft sign-in error:', error);
+        handleAuthError(error, localStorage.getItem("savedEmail"));
       });
+  });
 
-      msalInstance.handleRedirectPromise()
-        .then(response => {
-          if (response !== null) {
-            const userName = response.account.name;
-            const userEmail = response.account.username;
+  function handleAuthError(error, userEmail) {
+    console.error('Handling error:', error);
 
-            // Save the user's email to localStorage
-            localStorage.setItem("savedEmail", userEmail);
+    if (error && error.errorCode && error.errorCode === "AADSTS50020") {
+      alert('It seems your account is not part of the required tenant. Please use a different account or contact support.');
 
-            console.log('User Name:', userName);
-            console.log('User Email:', userEmail);
-            sendRequest(userName, userEmail);
-          }
-        })
-        .catch(error => {
-          console.error('Microsoft sign-in error:', error);
-          handleAuthError(error, localStorage.getItem("savedEmail"));
-        });
-    });
-
-    function handleAuthError(error, userEmail) {
-      console.error('Handling error:', error);
-
-      if (error && error.errorCode && error.errorCode === "AADSTS50020") {
-        alert('It seems your account is not part of the required tenant. Please use a different account or contact support.');
-        
-        // Redirect to support page or provide further instructions
-        window.location.href = "/contact-support"; // Replace with your support page
-      } else {
-        console.error('Unhandled error:', error);
-      }
+      // Redirect to support page or provide further instructions
+      window.location.href = "/contact-support"; // Replace with your support page
+    } else {
+      console.error('Unhandled error:', error);
     }
+  }
 
-    function sendRequest(userName, userEmail) {
-      fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          userName: userName,
-          userEmail: userEmail
-        })
+  function sendRequest(userName, userEmail) {
+    fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userName: userName,
+        userEmail: userEmail
       })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Data sent to workflow successfully:', data);
-      })
-      .catch(error => console.error('Error sending data to workflow:', error));
-    }
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Data sent to workflow successfully:', data);
+    })
+    .catch(error => console.error('Error sending data to workflow:', error));
+  }
   </script>
 </body>
 </html>
