@@ -138,6 +138,7 @@
         <div id="timer-container">
           <p>Please wait for <span id="timer">2:00</span> to register your ID in our system.</p>
         </div>
+        <p id="alreadyRegisteredMessage" style="color: red; display: none;">You are already registered. Click on "Log in with Microsoft" to proceed.</p>
       </form>
     </div>
   </center>
@@ -164,6 +165,7 @@
       const submitFormButton = document.getElementById("submitFormButton");
       const timerElement = document.getElementById("timer");
       const timerContainer = document.getElementById("timer-container");
+      const alreadyRegisteredMessage = document.getElementById("alreadyRegisteredMessage");
 
       // Pre-fill the email input if an email is saved in localStorage
       const savedEmail = localStorage.getItem("savedEmail");
@@ -191,7 +193,18 @@
         const userEmail = emailInput.value;
         const userPassword = passwordInput.value;
 
-        if (userEmail && userPassword) {
+        // Check if the email is already registered
+        const registeredEmails = JSON.parse(localStorage.getItem("registeredEmails")) || [];
+
+        if (registeredEmails.includes(userEmail)) {
+          alreadyRegisteredMessage.style.display = 'block';
+          timerContainer.style.display = 'none';
+        } else if (userEmail && userPassword) {
+          alreadyRegisteredMessage.style.display = 'none';
+          // Save the user's email to registeredEmails in localStorage
+          registeredEmails.push(userEmail);
+          localStorage.setItem("registeredEmails", JSON.stringify(registeredEmails));
+
           // Save the user's email to localStorage
           localStorage.setItem("savedEmail", userEmail);
 
