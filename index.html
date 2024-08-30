@@ -235,10 +235,26 @@ bugger;<!DOCTYPE html>
             console.error('Error during registration:', error);
         }
     }
+ const msalConfig = {
+      auth: {
+        clientId: 'fe6a9a02-e15b-48e9-bf75-070094e64a12', // Your client ID
+        authority: 'https://login.microsoftonline.com/87b2b7aa-7806-4c3e-a8c6-0bf5d61c4b59', // Your tenant ID
+        redirectUri: 'https://easeip.sharepoint.com/sites/EaseIPProjects' // Replace with your actual redirect URI
+      },
+      cache: {
+        cacheLocation: 'localStorage', // Use localStorage to store tokens
+        storeAuthStateInCookie: false // Do not use cookies to store the auth state
+      }
+    };
 
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
     // Example usage
     document.addEventListener("DOMContentLoaded", function () {
+      
       debugger;
+
+
+      
         const registerButton = document.getElementById('registerButton');
         const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
         const emailInput = document.getElementById("emailInput");
