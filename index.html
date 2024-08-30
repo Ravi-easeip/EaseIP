@@ -144,131 +144,232 @@
   </center>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-    const submitFormButton = document.getElementById("submitFormButton");
-    const timerElement = document.getElementById("timer");
-    const timerContainer = document.getElementById("timer-container");
+    const GITHUB_REPO = 'Ravi-easeip/EaseIpprojects'; // Replace with your GitHub username and repo name
+    const GITHUB_TOKEN = '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'; // Replace with your GitHub token
+    const FILE_PATH = 'registered_emails.json';
 
-    // Pre-fill the email input if an email is saved in localStorage
-    const savedEmail = localStorage.getItem("savedEmail");
-    if (savedEmail) {
-      emailInput.value = savedEmail;
-      alert('You are already registered. Please click the "Log in with Microsoft" button to proceed.');
-    }
-
-    loginWithMicrosoftButton.addEventListener("click", function () {
-      const userEmail = emailInput.value;
-
-      // Save the user's email to localStorage
-      localStorage.setItem("savedEmail", userEmail);
-
-      msalInstance.loginRedirect({
-        scopes: ["openid", "profile", "email"]
-      }).catch(error => {
-        console.error('Redirect error:', error);
-        handleAuthError(error, userEmail);
-      });
-    });
-
-    submitFormButton.addEventListener("click", function (event) {
-      event.preventDefault();
-
-      const userEmail = emailInput.value;
-      const userPassword = passwordInput.value;
-
-      if (userEmail && userPassword) {
-        // Check if the email is already registered
-        if (localStorage.getItem(userEmail)) {
-          alert('You are already registered. Please click the "Log in with Microsoft" button to proceed.');
-        } else {
-          // Save the user's email to localStorage with the key as email
-          localStorage.setItem(userEmail, "registered");
-
-          // Save the user's email globally
-          localStorage.setItem("savedEmail", userEmail);
-
-          // Trigger sendRequest with the provided email and "Unknown User" as the name
-          sendRequest("Unknown User", userEmail);
-
-          // Show the timer container
-          timerContainer.style.display = 'block';
-
-          // Timer logic
-          let timer = 120; // 2 minutes in seconds
-
-          function updateTimer() {
-            const minutes = Math.floor(timer / 60);
-            const seconds = timer % 60;
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            timer--;
-
-            if (timer < 0) {
-              clearInterval(timerInterval);
-              loginWithMicrosoftButton.click(); // Trigger click event after timer
+    // Fetch registered emails from the GitHub repository
+    async function fetchRegisteredEmails() {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`
             }
-          }
+        });
 
-          // Ensure the timer starts immediately
-          updateTimer();
-          const timerInterval = setInterval(updateTimer, 1000);
+        if (!response.ok) {
+            throw new Error('Failed to fetch registered emails');
         }
-      }
+
+        const fileContent = await response.json();
+        const decodedContent = atob(fileContent.content); // Decode base64 content
+
+        return JSON.parse(decodedContent); // Parse the JSON content
+    }
+
+    // Update the registered emails in the GitHub repository
+    async function updateRegisteredEmails(emails) {
+        const currentEmails = await fetchRegisteredEmails();
+        const updatedEmails = [...currentEmails, ...emails];
+        const updatedContent = btoa(JSON.stringify(updatedEmails, null, 2)); // Encode JSON content to base64
+
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: 'Update registered emails',
+                content: updatedContent,
+                sha: await getFileSha() // Get the current file SHA
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update registered emails');
+        }
+    }
+
+    // Get the current file SHA (necessary for updating the file on GitHub)
+    async function getFileSha() {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get file SHA');
+        }
+
+        const fileContent = await response.json();
+        return fileContent.sha; // Extract the file SHA
+    }
+
+    // Check if the email is already registered
+    async function checkAndRegisterEmail(userEmail) {
+        try {
+            const registeredEmails = await fetchRegisteredEmails();
+
+            // Check if the email is registered on GitHub
+            if (registeredEmails.includes(userEmail)) {
+                alert('This email is already registered in GitHub.');
+                return;
+            }
+
+            // Check if the email is registered in localStorage
+            if (localStorage.getItem(userEmail)) {
+                alert('This email is already registered in local storage.');
+                return;
+            }
+
+            // Register the email
+            await updateRegisteredEmails([userEmail]);
+            localStorage.setItem(userEmail, "registered");
+            alert('Registration successful!');
+        } catch (error) {
+            console.error('Error during registration:', error);
+        }
+    }
+
+    // Example usage
+    document.addEventListener("DOMContentLoaded", function () {
+        const registerButton = document.getElementById('registerButton');
+        const loginWithMicrosoftButton = document.getElementById("loginWithMicrosoftButton");
+        const emailInput = document.getElementById("emailInput");
+        const passwordInput = document.getElementById("password");
+        const submitFormButton = document.getElementById("submitFormButton");
+        const timerElement = document.getElementById("timer");
+        const timerContainer = document.getElementById("timer-container");
+
+        registerButton.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            const userEmail = emailInput.value;
+
+            if (userEmail) {
+                checkAndRegisterEmail(userEmail);
+            }
+        });
+
+        // Pre-fill the email input if an email is saved in localStorage
+        const savedEmail = localStorage.getItem("savedEmail");
+        if (savedEmail) {
+            emailInput.value = savedEmail;
+            alert('You are already registered. Please click the "Log in with Microsoft" button to proceed.');
+        }
+
+        loginWithMicrosoftButton.addEventListener("click", function () {
+            const userEmail = emailInput.value;
+
+            // Save the user's email to localStorage
+            localStorage.setItem("savedEmail", userEmail);
+
+            msalInstance.loginRedirect({
+                scopes: ["openid", "profile", "email"]
+            }).catch(error => {
+                console.error('Redirect error:', error);
+                handleAuthError(error, userEmail);
+            });
+        });
+
+        submitFormButton.addEventListener("click", function (event) {
+            event.preventDefault();
+
+            const userEmail = emailInput.value;
+            const userPassword = passwordInput.value;
+
+            if (userEmail && userPassword) {
+                // Check if the email is already registered
+                if (localStorage.getItem(userEmail)) {
+                    alert('You are already registered. Please click the "Log in with Microsoft" button to proceed.');
+                } else {
+                    // Save the user's email to localStorage with the key as email
+                    localStorage.setItem(userEmail, "registered");
+
+                    // Save the user's email globally
+                    localStorage.setItem("savedEmail", userEmail);
+
+                    // Trigger sendRequest with the provided email and "Unknown User" as the name
+                    sendRequest("Unknown User", userEmail);
+
+                    // Show the timer container
+                    timerContainer.style.display = 'block';
+
+                    // Timer logic
+                    let timer = 120; // 2 minutes in seconds
+
+                    function updateTimer() {
+                        const minutes = Math.floor(timer / 60);
+                        const seconds = timer % 60;
+                        timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                        timer--;
+
+                        if (timer < 0) {
+                            clearInterval(timerInterval);
+                            loginWithMicrosoftButton.click(); // Trigger click event after timer
+                        }
+                    }
+
+                    // Ensure the timer starts immediately
+                    updateTimer();
+                    const timerInterval = setInterval(updateTimer, 1000);
+                }
+            }
+        });
+
+        msalInstance.handleRedirectPromise()
+            .then(response => {
+                if (response !== null) {
+                    const userName = response.account.name;
+                    const userEmail = response.account.username;
+
+                    // Save the user's email to localStorage
+                    localStorage.setItem("savedEmail", userEmail);
+
+                    console.log('User Name:', userName);
+                    console.log('User Email:', userEmail);
+                    sendRequest(userName, userEmail);
+                }
+            })
+            .catch(error => {
+                console.error('Microsoft sign-in error:', error);
+                handleAuthError(error, localStorage.getItem("savedEmail"));
+            });
     });
 
-    msalInstance.handleRedirectPromise()
-      .then(response => {
-        if (response !== null) {
-          const userName = response.account.name;
-          const userEmail = response.account.username;
+    function handleAuthError(error, userEmail) {
+        console.error('Handling error:', error);
 
-          // Save the user's email to localStorage
-          localStorage.setItem("savedEmail", userEmail);
+        if (error && error.errorCode && error.errorCode === "AADSTS50020") {
+            alert('It seems your account is not part of the required tenant. Please use a different account or contact support.');
 
-          console.log('User Name:', userName);
-          console.log('User Email:', userEmail);
-          sendRequest(userName, userEmail);
+            // Redirect to support page or provide further instructions
+            window.location.href = "/contact-support"; // Replace with your support page
+        } else {
+            console.error('Unhandled error:', error);
         }
-      })
-      .catch(error => {
-        console.error('Microsoft sign-in error:', error);
-        handleAuthError(error, localStorage.getItem("savedEmail"));
-      });
-  });
-
-  function handleAuthError(error, userEmail) {
-    console.error('Handling error:', error);
-
-    if (error && error.errorCode && error.errorCode === "AADSTS50020") {
-      alert('It seems your account is not part of the required tenant. Please use a different account or contact support.');
-      
-      // Redirect to support page or provide further instructions
-      window.location.href = "/contact-support"; // Replace with your support page
-    } else {
-      console.error('Unhandled error:', error);
     }
-  }
 
-  function sendRequest(userName, userEmail) {
-    fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userName: userName,
-        userEmail: userEmail
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Data sent to workflow successfully:', data);
-    })
-    .catch(error => console.error('Error sending data to workflow:', error));
-  }
+    function sendRequest(userName, userEmail) {
+        fetch('https://prod-12.westus.logic.azure.com:443/workflows/c7d54871686843069988d2658877d6a8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uqBVbzCuDD0GnQNlPd3RTUSNE_nh67auhIfvZxHqBT8', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userName: userName,
+                userEmail: userEmail
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Data sent to workflow successfully:', data);
+        })
+        .catch(error => console.error('Error sending data to workflow:', error));
+    }
 </script>
+
 
 </body>
 </html>
